@@ -1,0 +1,57 @@
+experiment_name: agent-kb-pilot-SYNTHETIC  # offline pipeline test config
+reps_per_task: 3
+max_steps: 30
+run_timeout_s: 360
+concurrency:
+  global: 4
+  per_site: 2
+# Polite pacing between page actions (seconds, uniform random).
+action_delay_s: [1.0, 3.0]
+browser:
+  headless: true
+  viewport: [1280, 800]
+  # Sites (by task `site`) to run headed if headless behaves differently. See DECISIONS.md.
+  headed_sites: []
+models:
+  agent:
+    provider: fake
+    name: "claude-sonnet-5-5"
+    effort: medium             # Anthropic output_config.effort for the browsing agent
+  analysis:
+    provider: fake
+    name: "claude-opus-5-5"
+    effort: medium
+  transfer_agent:              # stretch (M7): a second model reusing the KB built from `agent`
+    provider: fake
+    name: "claude-haiku-5-5"
+    effort: medium
+# USD per 1M tokens, used for cost estimates and the budget guard.
+pricing:
+  claude-opus-5-5: {input: 4.00, output: 20.00}
+  claude-sonnet-5-5: {input: 2.00, output: 10.00}
+  claude-haiku-5-5: {input: 0.10, output: 0.50}
+  gpt-5: {input: 1.25, output: 10.00}
+  fake: {input: 0.0, output: 0.0}
+embeddings:
+  provider: tfidf              # local (sentence-transformers) | openai | tfidf
+  name: all-MiniLM-L6-v2
+clustering:
+  cosine_distance_threshold: 0.25
+kb:
+  top_k: 5
+  include_hindsight: false
+judge:
+  sample_size: 20
+budget:
+  max_budget_usd: 100000
+dummy_values:
+  zip: "94704"
+  city: "Berkeley, CA"
+runner: fake   # SYNTHETIC: no browser, no API calls
+paths:
+  db: data_fake/experiment.db
+  traces: data_fake/traces
+  cache: data_fake/llm_cache
+  kb_frozen: data_fake/kb_frozen.json
+  resolved_dates: data_fake/resolved_dates.json
+  out: out_fake
