@@ -66,7 +66,7 @@ def complete_json(
 ) -> dict[str, Any]:
     """One structured-output call. Returns parsed JSON matching `schema`. Cached by input hash."""
     mc = model_cfg(role)
-    images = [p for p in (images or []) if p and Path(p).exists()]
+    images = [p for p in (images or []) if p and Path(p).exists()] if supports_vision(role) else []
     key_material = {
         "provider": mc["provider"],
         "model": mc["name"],
@@ -89,6 +89,8 @@ def complete_json(
         out, usage = _anthropic(mc, system, text, schema, images, max_tokens)
     elif mc["provider"] == "openai":
         out, usage = _openai(mc, system, text, schema, images, max_tokens)
+    elif mc["provider"] == "groq":
+        out, usage = _groq(mc, system, text, schema, images, max_tokens)
     elif mc["provider"] == "fake":
         out, usage = _fake(schema, key), (0, 0)
     else:
@@ -104,6 +106,11 @@ def complete_json(
 
 _anthropic_client = None
 _openai_client = None
+_groq_client = None
+
+
+def supports_vision(role: str) -> bool:
+    return bool(model_cfg(role).get("vision", True))
 
 
 def _anthropic(mc, system, text, schema, images, max_tokens):
@@ -146,6 +153,29 @@ def _openai(mc, system, text, schema, images, max_tokens):
         messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
         response_format={"type": "json_schema", "json_schema": {"name": "output", "schema": schema, "strict": True}},
         max_completion_tokens=max_tokens,
+    )
+    return json.loads(resp.choices[0].message.content), (resp.usage.prompt_tokens, resp.usage.completion_tokens)
+
+
+def _groq(mc, system, text, schema, images, max_tokens):
+    import groq
+
+    global _groq_client
+    _groq_client = _groq_client or groq.Groq(max_retries=10)  # SDK honours retry-after on 429 (low free-tier TPM)
+    if images:
+        content: Any = [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_jpeg_b64(p)}"}}
+                        for p in images] + [{"type": "text", "text": text}]
+    else:
+        content = text  # text-only models reject content-part lists
+    kw: dict[str, Any] = {}
+    if mc.get("reasoning_effort"):
+        kw["reasoning_effort"] = mc["reasoning_effort"]
+    resp = _groq_client.chat.completions.create(
+        model=mc["name"],
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
+        response_format={"type": "json_schema", "json_schema": {"name": "output", "schema": schema, "strict": True}},
+        max_completion_tokens=min(max_tokens, mc.get("max_completion_tokens", 6000)),
+        **kw,
     )
     return json.loads(resp.choices[0].message.content), (resp.usage.prompt_tokens, resp.usage.completion_tokens)
 

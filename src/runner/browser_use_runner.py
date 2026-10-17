@@ -30,6 +30,8 @@ from src.runner.guards import IrreversibleActionGuard, element_labels
 log = logging.getLogger(__name__)
 
 OBS_CHARS = 4000
+PROVIDER_ERROR_RE = re.compile(r"Error code: (?:413|429|5\d\d)|rate_limit_exceeded|Request too large|overloaded",
+                               re.IGNORECASE)
 
 
 def make_llm(role: str = "agent"):
@@ -45,6 +47,10 @@ def make_llm(role: str = "agent"):
             output_config={"effort": mc["effort"]} if mc.get("effort") else None,
             max_tokens=16000,
         )
+    if mc["provider"] == "groq":
+        from browser_use import ChatGroq
+
+        return ChatGroq(model=mc["name"], max_retries=10)
     if mc["provider"] == "openai":
         from browser_use import ChatOpenAI
 
@@ -152,6 +158,7 @@ class BrowserUseRunner:
             extend_system_message=build_system_extension(kb_notes, c["dummy_values"]["zip"]),
             initial_actions=[{"navigate": {"url": task.start_url, "new_tab": False}}],
             use_judge=False,
+            use_vision=bool(model_cfg(self.role).get("vision", True)),
             generate_gif=False,
             calculate_cost=False,
             max_failures=3,
@@ -243,6 +250,9 @@ class BrowserUseRunner:
         result.final_url = await bs.get_current_page_url()
         png = await bs.take_screenshot()
         result.final_screenshot_path = _save_png(png, trace_dir / "final.png")
+        obs = trace_dir / "final_obs.txt"
+        obs.write_text(await _page_text(bs))
+        result.final_observation_path = str(obs)
 
     def _finalize(self, result: RunResult, history, agent, tools) -> None:
         final = ""
@@ -271,8 +281,16 @@ class BrowserUseRunner:
                 pass
         result.est_cost_usd = round(est_cost(self.model_name, result.input_tokens, result.output_tokens), 5)
 
+        # Provider/API failures (request too large, rate limit, 5xx) are infrastructure faults, not agent mistakes:
+        # record them as harness errors so they are excluded from success rates instead of judged as failures.
+        provider_errs = [st.error for st in result.steps if st.error and PROVIDER_ERROR_RE.search(st.error)]
+        if provider_errs and not result.error:
+            result.error = f"provider_error ({len(provider_errs)} steps): {provider_errs[-1][:300]}"
+
         upper = final.upper()
-        if tools.tripped:
+        if result.error and result.error.startswith("provider_error"):
+            result.terminal_status = "error"
+        elif tools.tripped:
             result.terminal_status = "guard_stopped"
             result.guard_blocked_text = tools.tripped
             # Agent "claimed" only if it had already said done; the guard's own done is not a claim.

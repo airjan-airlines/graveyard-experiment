@@ -29,6 +29,29 @@ Every judgment call and deviation from the build brief, newest sections last. Ke
 - **No API key** was available while building, so M1–M6 were built and verified offline (see "Verification"). The
   live 72+72 runs need `ANTHROPIC_API_KEY` in `.env`.
 
+## Switch to Groq (user request)
+
+- **Provider is now Groq.** Agent and analysis both use `openai/gpt-oss-120b`, the strongest chat model on the
+  account. Transfer uses `openai/gpt-oss-20b`. The account's chat models are gpt-oss-120b, gpt-oss-20b and
+  qwen3.8-27b; the Llama-4 vision models are no longer offered. The Anthropic setup remains in `config.yaml` as a
+  commented alternative.
+- **Agent and judge are the same model.** The brief asked for a stronger analysis model, but nothing on Groq is
+  stronger than gpt-oss-120b. The report names both models.
+- **No screenshots for the agent or the judge.** gpt-oss is text-only (HTTP 400 on image parts). The agent runs
+  with `use_vision=False` and browses from browser-use's DOM listing. The judge and summarizer get the page text
+  (interactive elements and text) of the last 2 steps and the final state in place of screenshots. Screenshots are
+  still saved for humans and for the judge-validation CSV.
+  - qwen3.8-27b does accept images, but its 1,000 output-tokens/min cap makes it unusable as a judge.
+- **Provider errors are harness errors.** Any step that fails with 413/429/5xx or "rate_limit_exceeded" marks the
+  run as `terminal_status=error`. Such runs are excluded from success rates and counted separately. Before this
+  fix, a rate-limited run was judged as an ordinary agent failure.
+- **Free-tier blocker.** The account is on Groq's free `on_demand` tier: 8,000 tokens/min for gpt-oss-120b.
+  - A single browser-use step on irs.gov needed about 10.6k tokens, so Groq rejected every step as "Request too
+    large".
+  - The full experiment is about 144 runs × ~15 steps. Even with trimmed prompts it would be throttled to roughly
+    1 step per minute, plus Groq's daily caps.
+  - It needs Groq's Developer (pay-as-you-go) tier, or another provider.
+
 ## Tasks
 
 - **Sites follow the brief's explicit task list.** That list has IRS ×2 + CA DMV ×1 and NPS ×2 + Recreation.gov ×1, so it

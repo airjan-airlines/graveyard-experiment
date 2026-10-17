@@ -13,20 +13,30 @@ browser:
   # Sites (by task `site`) to run headed if headless behaves differently. See DECISIONS.md.
   headed_sites: []
 models:
+  # provider: groq | anthropic | openai | fake. `vision: false` = text-only model: the agent browses from the DOM
+  # listing only, and the judge/analysis read page text instead of screenshots.
   agent:
-    provider: anthropic        # anthropic | openai | fake
-    name: "claude-sonnet-5-5"
-    effort: medium             # Anthropic output_config.effort for the browsing agent
+    provider: groq
+    name: "openai/gpt-oss-120b"
+    vision: false
   analysis:
-    provider: anthropic
-    name: "claude-opus-5-5"
-    effort: medium
+    provider: groq
+    name: "openai/gpt-oss-120b"
+    vision: false
+    reasoning_effort: medium   # Groq gpt-oss reasoning effort
+    max_completion_tokens: 3000  # counts against Groq's per-minute token limit
   transfer_agent:              # stretch (M7): a second model reusing the KB built from `agent`
-    provider: anthropic
-    name: "claude-haiku-5-5"
-    effort: medium
+    provider: groq
+    name: "openai/gpt-oss-20b"
+    vision: false
+  # Anthropic alternative (needs ANTHROPIC_API_KEY):
+  #   agent:    {provider: anthropic, name: "claude-sonnet-5-5", effort: medium}
+  #   analysis: {provider: anthropic, name: "claude-opus-5-5", effort: medium}
 # USD per 1M tokens, used for cost estimates and the budget guard.
-pricing:
+pricing:                       # Groq prices are approximate list prices; check console.groq.com/pricing
+  openai/gpt-oss-120b: {input: 0.15, output: 0.60}
+  openai/gpt-oss-20b: {input: 0.075, output: 0.30}
+  qwen/qwen3.8-27b: {input: 0.29, output: 0.59}
   claude-opus-5-5: {input: 4.00, output: 20.00}
   claude-sonnet-5-5: {input: 2.00, output: 10.00}
   claude-haiku-5-5: {input: 0.10, output: 0.50}

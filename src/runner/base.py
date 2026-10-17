@@ -55,6 +55,7 @@ class RunResult:
     est_cost_usd: float = 0.0
     final_url: str | None = None
     final_screenshot_path: str | None = None
+    final_observation_path: str | None = None  # compact page text of the final state (for text-only judges)
     kb_entry_ids_used: list[str] = field(default_factory=list)
     error: str | None = None
     guard_blocked_text: str | None = None

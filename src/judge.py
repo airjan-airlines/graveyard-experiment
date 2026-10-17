@@ -6,7 +6,9 @@ import json
 
 from src import db
 from src.config import model_cfg, task_map
-from src.llm import complete_json, obj, pmap
+from pathlib import Path
+
+from src.llm import complete_json, obj, pmap, supports_vision
 from src.runner.base import RunResult
 
 JUDGE_SYSTEM = "You are grading whether a web agent completed a task. Be strict and evidence-based."
@@ -55,6 +57,33 @@ def action_log(res: RunResult, with_obs: bool = False) -> str:
     return "\n".join(lines) or "(no actions)"
 
 
+PAGE_TEXT_CHARS = 2500
+
+
+def page_text_evidence(res: RunResult, n_last: int = 2) -> str:
+    """Stand-in for screenshots when the analysis model is text-only: the compact page text (interactive-element
+    listing) after the last steps and at the final state."""
+    parts = []
+    for s in res.steps[-n_last:]:
+        if s.observation_path and Path(s.observation_path).exists():
+            parts.append(f"--- after step {s.index + 1} ---\n{Path(s.observation_path).read_text()[:PAGE_TEXT_CHARS]}")
+    if res.final_observation_path and Path(res.final_observation_path).exists():
+        parts.append(f"--- FINAL STATE ---\n{Path(res.final_observation_path).read_text()[:PAGE_TEXT_CHARS]}")
+    return "\n".join(parts) or "(no page text captured)"
+
+
+def with_evidence(text: str, res: RunResult, role: str = "analysis") -> str:
+    if supports_vision(role):
+        return text
+    return (text.replace("[Screenshots attached: last 3 steps, final state]",
+                         "[Page text (visible interactive elements and text) attached below in place of screenshots]")
+            .replace("[Screenshots attached for the steps around the failure]",
+                     "[Page text attached below in place of screenshots]")
+            .replace("evidence visible in the screenshots", "evidence in the page text")
+            .replace("only if the screenshots support it", "only if the page text supports it")
+            + "\n\nPAGE TEXT EVIDENCE:\n" + page_text_evidence(res))
+
+
 def judge_run(run_id: str) -> dict:
     row = db.query("SELECT * FROM runs WHERE run_id=?", [run_id])[0]
     res = RunResult.load(row["trace_path"])
@@ -71,7 +100,7 @@ def judge_run(run_id: str) -> dict:
         final_answer=res.final_answer or "(empty)",
         terminal_status=res.terminal_status,
     )
-    out = complete_json("analysis", "judge", JUDGE_SYSTEM, text, JUDGE_SCHEMA, images=shots)
+    out = complete_json("analysis", "judge", JUDGE_SYSTEM, with_evidence(text, res), JUDGE_SCHEMA, images=shots)
     if res.terminal_status in ("blocked_captcha", "blocked_login"):
         out["success"] = False  # protocol rule, regardless of what the judge returned
     # false-success is defined against the harness-recorded claim, not the judge's guess about it

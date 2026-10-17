@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src import db
 from src.config import task_map
-from src.judge import action_log
+from src.judge import action_log, with_evidence
 from src.llm import complete_json, nullable, obj
 from src.runner.base import RunResult
 
@@ -56,8 +56,8 @@ SCHEMA = obj(
     page_context={"type": "string"},
 )
 
-OBS_PER_STEP = 600
-MAX_LOG_CHARS = 14000
+OBS_PER_STEP = 300
+MAX_LOG_CHARS = 9000  # keep prompts inside low provider token-per-minute limits
 
 
 def steps_with_observations(res: RunResult) -> str:
@@ -97,4 +97,4 @@ def summarize_failure(run_id: str) -> dict:
     task = task_map()[res.task_id]
     text = PROMPT.format(instruction=res.instruction or task.instruction, site=task.site,
                          judge_reason=row["judge_reason"], steps_with_observations=steps_with_observations(res))
-    return complete_json("analysis", "summarize", SYSTEM, text, SCHEMA, images=failure_screens(res))
+    return complete_json("analysis", "summarize", SYSTEM, with_evidence(text, res), SCHEMA, images=failure_screens(res))
