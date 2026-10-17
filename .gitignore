@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+.pytest_cache/
+# Fake-mode (synthetic) outputs
+data_fake/
+out_fake/

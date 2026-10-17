@@ -1,0 +1,12 @@
+# Pinned to the versions this pipeline was built and tested against.
+browser-use==0.13.11
+anthropic==1.15.0
+openai==2.26.0
+pyyaml==6.0.3
+python-dotenv==1.2.2
+pillow==12.3.0
+numpy==2.5.4
+scikit-learn==1.9.1
+matplotlib==3.11.2
+sentence-transformers==6.1.0
+pytest==9.1.1
