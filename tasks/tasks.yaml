@@ -1,0 +1,379 @@
+# 24 everyday, non-coding web tasks: 3 per site x 8 sites.
+# Date tokens like {date:first_friday_next_month} (optionally +N days) are resolved once per experiment
+# into concrete dates (data/resolved_dates.json) so baseline and with_kb runs use identical dates.
+# ground_truth is filled only where the answer is stable; otherwise the judge relies on trajectory + screenshots.
+
+# ----------------------------------------------------------------------------- Travel: Google Flights
+- id: flights_01
+  site: google.com/travel/flights
+  category: travel
+  start_url: https://www.google.com/travel/flights
+  instruction: >
+    Find the cheapest nonstop round-trip economy flight for 1 adult from San Francisco (SFO) to Seattle (SEA),
+    departing {date:first_friday_next_month} and returning {date:first_friday_next_month+2}.
+    Report the airline and the round-trip price. Do not book.
+  task_type: lookup
+  success_criteria: >
+    Final answer names an airline and a round-trip price, and the final page shows round-trip results
+    from SFO to SEA for the requested departure and return dates, filtered to nonstop flights, with the
+    reported flight being the cheapest nonstop option shown.
+  ground_truth: null
+  hard_patterns: [date_picker, filters, autocomplete]
+  irreversible_stop_words: ["Book", "Continue to book", "Purchase", "Pay"]
+
+- id: flights_02
+  site: google.com/travel/flights
+  category: travel
+  start_url: https://www.google.com/travel/flights
+  instruction: >
+    Find the earliest-departing one-way flight for 1 adult from Oakland (OAK) to Los Angeles (LAX) on
+    {date:next_tuesday}. Report its departure time and airline. Do not book.
+  task_type: lookup
+  success_criteria: >
+    The search is one-way, OAK to LAX (not other Bay Area or LA-area airports), on the requested date, and the
+    reported flight is the earliest departure among the results (sorted by or verified against departure time).
+  ground_truth: null
+  hard_patterns: [date_picker, autocomplete, trip_type_dropdown, sorting]
+  irreversible_stop_words: ["Book", "Continue to book", "Purchase", "Pay"]
+
+- id: flights_03
+  site: google.com/travel/flights
+  category: travel
+  start_url: https://www.google.com/travel/flights
+  instruction: >
+    Search round-trip economy flights for 1 adult from San Francisco (SFO) to Seattle (SEA), departing
+    {date:first_friday_next_month} and returning {date:first_friday_next_month+2}. Use the site's bags filter
+    so that prices include 1 carry-on bag, then report the cheapest option's airline and price. Do not book.
+  task_type: lookup
+  success_criteria: >
+    The final results page shows SFO to SEA round trip for the requested dates with the bags filter set to
+    1 carry-on bag, and the answer reports the cheapest option's airline and price from that filtered list.
+  ground_truth: null
+  hard_patterns: [date_picker, filters, hidden_filter_menu]
+  irreversible_stop_words: ["Book", "Continue to book", "Purchase", "Pay"]
+
+# ----------------------------------------------------------------------------- Transit: BART
+- id: bart_01
+  site: bart.gov
+  category: transit
+  start_url: https://www.bart.gov
+  instruction: >
+    Use the BART trip planner to find a trip from Downtown Berkeley station to SFO (San Francisco International
+    Airport) station departing at 9:00 AM on {date:next_wednesday}. Report the departure time of the first trip
+    shown and the number of transfers.
+  task_type: lookup
+  success_criteria: >
+    The trip planner results are for Downtown Berkeley to SFO, departing around 9:00 AM on the requested date,
+    and the answer gives a departure time and a transfer count consistent with the results shown.
+  ground_truth: null
+  hard_patterns: [autocomplete, date_picker, time_picker]
+  irreversible_stop_words: []
+
+- id: bart_02
+  site: bart.gov
+  category: transit
+  start_url: https://www.bart.gov
+  instruction: >
+    Find the regular adult (Clipper) one-way fare on BART from Downtown Berkeley to Embarcadero. Report the fare.
+  task_type: lookup
+  success_criteria: >
+    The answer reports a one-way adult fare for Downtown Berkeley to Embarcadero that matches what the BART
+    fare calculator or trip planner on the final page shows for that origin and destination.
+  ground_truth: null
+  hard_patterns: [custom_dropdown, navigation]
+  irreversible_stop_words: []
+
+- id: bart_03
+  site: bart.gov
+  category: transit
+  start_url: https://www.bart.gov
+  instruction: >
+    Find BART's elevator status / elevator outage page and report whether any elevator outage is currently
+    listed for MacArthur station.
+  task_type: lookup
+  success_criteria: >
+    The final page is BART's official elevator status or outage listing, and the answer correctly states
+    whether MacArthur station appears with an outage on that page.
+  ground_truth: null
+  hard_patterns: [navigation, non_obvious_entry_point]
+  irreversible_stop_words: []
+
+# ----------------------------------------------------------------------------- Government: IRS
+- id: irs_01
+  site: irs.gov
+  category: government
+  start_url: https://www.irs.gov
+  instruction: >
+    On IRS.gov, find the form number of the form a taxpayer files to request a transcript of their tax return
+    by mail or fax. Report the form number.
+  task_type: lookup
+  success_criteria: >
+    The answer gives the form number of the IRS form titled "Request for Transcript of Tax Return", supported by
+    an IRS.gov page visible in the final screenshots.
+  ground_truth: "4506-T"
+  hard_patterns: [site_search, similar_forms]
+  irreversible_stop_words: []
+
+- id: irs_02
+  site: irs.gov
+  category: government
+  start_url: https://www.irs.gov
+  instruction: >
+    On IRS.gov, find the current standard mileage rate for business use of a vehicle. Report the rate and the
+    year it applies to.
+  task_type: lookup
+  success_criteria: >
+    The answer reports the business standard mileage rate in cents per mile and the tax year, matching an
+    IRS.gov page in the final screenshots, and it is the most recent year's rate listed (not a prior year).
+  ground_truth: null
+  hard_patterns: [site_search, stale_content]
+  irreversible_stop_words: []
+
+# ----------------------------------------------------------------------------- Government: CA DMV
+- id: dmv_01
+  site: dmv.ca.gov
+  category: government
+  start_url: https://www.dmv.ca.gov
+  instruction: >
+    On the California DMV website, find the page about renewing a standard (non-commercial) driver's license and
+    report, in one sentence, the conditions under which a driver is eligible to renew online. Also report the
+    renewal fee if the site lists it.
+  task_type: lookup
+  success_criteria: >
+    The final page is an official dmv.ca.gov page about driver's license renewal, and the answer summarizes the
+    online-renewal eligibility conditions shown there (and the fee, if listed) without contradicting the page.
+  ground_truth: null
+  hard_patterns: [navigation, eligibility_rules, popup_or_banner]
+  irreversible_stop_words: ["Submit", "Pay", "Start renewal"]
+
+# ----------------------------------------------------------------------------- Postal: USPS
+- id: usps_01
+  site: usps.com
+  category: postal
+  start_url: https://www.usps.com
+  instruction: >
+    Use USPS's ZIP Code lookup to find the ZIP Code for the address 1 Dr Carlton B Goodlett Place, San Francisco,
+    CA (San Francisco City Hall). Report the 5-digit ZIP Code.
+  task_type: lookup
+  success_criteria: >
+    The answer gives the 5-digit ZIP Code returned by the USPS ZIP Code lookup tool for that address, and the
+    lookup result is visible in the final screenshots.
+  ground_truth: "94102"
+  hard_patterns: [multi_field_form, state_dropdown]
+  irreversible_stop_words: []
+
+- id: usps_02
+  site: usps.com
+  category: postal
+  start_url: https://www.usps.com
+  instruction: >
+    Find the current retail price of a Priority Mail Flat Rate Small Box on USPS.com. Report the price.
+  task_type: lookup
+  success_criteria: >
+    The answer reports the retail (not commercial/online) price for the Priority Mail Small Flat Rate Box,
+    matching a USPS.com page visible in the final screenshots.
+  ground_truth: null
+  hard_patterns: [retail_vs_commercial_prices, navigation]
+  irreversible_stop_words: ["Add to Cart", "Checkout", "Pay"]
+
+- id: usps_03
+  site: usps.com
+  category: postal
+  start_url: https://www.usps.com
+  instruction: >
+    Use USPS's Find a Post Office tool to find the post office nearest to ZIP Code 94704 and report its name and
+    its Saturday retail hours.
+  task_type: lookup
+  success_criteria: >
+    The final screenshots show the USPS location search for 94704 and the detail for the nearest Post Office
+    (a full post office, not just a collection box or approved shipper), and the answer reports its Saturday
+    retail hours as shown.
+  ground_truth: null
+  hard_patterns: [location_filter_type, detail_page]
+  irreversible_stop_words: []
+
+# ----------------------------------------------------------------------------- Retail: REI
+- id: rei_01
+  site: rei.com
+  category: retail
+  start_url: https://www.rei.com
+  instruction: >
+    On REI.com, find the REI Co-op Rainier Rain Jacket for men. Select size M and color Black (if Black is not
+    offered, say so and pick any color). Report the price and whether that size/color is available to ship
+    online.
+  task_type: lookup
+  success_criteria: >
+    The final page is the men's REI Co-op Rainier Rain Jacket product page with size M and the reported color
+    selected, and the answer's price and online availability match what the page shows for that variant.
+  ground_truth: null
+  hard_patterns: [variant_selection, size_swatches, color_swatches]
+  irreversible_stop_words: ["Add to cart", "Checkout", "Check out", "Buy now", "Place order"]
+
+- id: rei_02
+  site: rei.com
+  category: retail
+  start_url: https://www.rei.com
+  instruction: >
+    On REI.com, list women's hiking boots and apply filters for waterproof, women's size 8, and price under $150.
+    Report how many results the filtered list shows.
+  task_type: lookup
+  success_criteria: >
+    The final page is a women's hiking boots listing with filters for waterproof, size 8, and a price range
+    entirely under $150 applied, and the answer reports the result count shown on that page.
+  ground_truth: null
+  hard_patterns: [filters, facets, price_range]
+  irreversible_stop_words: ["Add to cart", "Checkout", "Check out", "Buy now", "Place order"]
+
+- id: rei_03
+  site: rei.com
+  category: retail
+  start_url: https://www.rei.com
+  instruction: >
+    On REI.com, add one REI Co-op Flash 22 Pack (any color) to the cart, then open the cart page and STOP. Do not
+    check out. Report the item and price shown in the cart.
+  task_type: reach_state
+  success_criteria: >
+    The final page is the REI cart showing exactly one REI Co-op Flash 22 Pack, and the agent did not proceed to
+    checkout. The answer reports the item and price shown in the cart.
+  ground_truth: null
+  hard_patterns: [variant_selection, add_to_cart_modal, stop_before_checkout]
+  irreversible_stop_words: ["Checkout", "Check out", "Proceed to checkout", "PayPal", "Place order", "Buy now"]
+
+# ----------------------------------------------------------------------------- Recipes: Allrecipes
+- id: allrecipes_01
+  site: allrecipes.com
+  category: recipes
+  start_url: https://www.allrecipes.com
+  instruction: >
+    On Allrecipes, open the "Best Chocolate Chip Cookies" recipe. Use the recipe's own servings/scale control to
+    scale it to 48 servings, then report the amount of butter in the scaled ingredient list.
+  task_type: lookup
+  success_criteria: >
+    The final page is the Best Chocolate Chip Cookies recipe with the ingredient list scaled via the site's
+    control so that it yields 48 servings, and the butter amount reported matches the scaled list.
+  ground_truth: null
+  hard_patterns: [scaling_control, popup_or_banner]
+  irreversible_stop_words: []
+
+- id: allrecipes_02
+  site: allrecipes.com
+  category: recipes
+  start_url: https://www.allrecipes.com
+  instruction: >
+    On Allrecipes, find a vegetarian lasagna recipe whose total time is under 2 hours. Report the recipe name and
+    its total time.
+  task_type: lookup
+  success_criteria: >
+    The final page is a vegetarian lasagna recipe (no meat in the ingredients) whose listed Total Time is under 2
+    hours, and the answer reports that recipe's name and total time.
+  ground_truth: null
+  hard_patterns: [site_search, detail_page_verification]
+  irreversible_stop_words: []
+
+- id: allrecipes_03
+  site: allrecipes.com
+  category: recipes
+  start_url: https://www.allrecipes.com
+  instruction: >
+    On Allrecipes, open the "World's Best Lasagna" recipe and report how many ratings it has.
+  task_type: lookup
+  success_criteria: >
+    The final page is the World's Best Lasagna recipe and the answer reports the number of ratings shown on that
+    page (ratings, not reviews or photos).
+  ground_truth: null
+  hard_patterns: [site_search, ratings_vs_reviews]
+  irreversible_stop_words: []
+
+# ----------------------------------------------------------------------------- Restaurants: OpenTable
+- id: opentable_01
+  site: opentable.com
+  category: restaurants
+  start_url: https://www.opentable.com
+  instruction: >
+    On OpenTable, find a table for 2 people in Berkeley, CA on {date:next_saturday} at 7:00 PM at any Italian
+    restaurant. Click an available time slot to reach the booking details page, then STOP before entering any
+    details or completing the reservation. Report the restaurant and the time slot.
+  task_type: reach_state
+  success_criteria: >
+    The final page is OpenTable's booking details page for an Italian restaurant in Berkeley for party size 2 on
+    the requested date at or near 7:00 PM, and no reservation was completed.
+  ground_truth: null
+  hard_patterns: [date_picker, party_size_dropdown, location_autocomplete, cuisine_filter]
+  irreversible_stop_words: ["Complete reservation", "Confirm reservation", "Reserve now"]
+
+- id: opentable_02
+  site: opentable.com
+  category: restaurants
+  start_url: https://www.opentable.com
+  instruction: >
+    On OpenTable, list three restaurants in Berkeley, CA that have availability for 4 people on
+    {date:next_friday} at around 6:30 PM. Report the three restaurant names. Do not book.
+  task_type: lookup
+  success_criteria: >
+    The final results show an OpenTable search for Berkeley for 4 people on the requested date around 6:30 PM,
+    and the three restaurants named each show available time slots in those results.
+  ground_truth: null
+  hard_patterns: [date_picker, party_size_dropdown, location_autocomplete]
+  irreversible_stop_words: ["Complete reservation", "Confirm reservation", "Reserve now"]
+
+- id: opentable_03
+  site: opentable.com
+  category: restaurants
+  start_url: https://www.opentable.com
+  instruction: >
+    On OpenTable, open the page for Rivoli Restaurant in Berkeley, CA, start a reservation for 2 people on
+    {date:next_friday} at any available evening time, and report the cancellation policy shown during the
+    reservation flow. Stop before entering any personal details.
+  task_type: reach_state
+  success_criteria: >
+    The final screenshots show Rivoli's OpenTable reservation flow for 2 people on the requested date, and the
+    answer reports the cancellation policy text displayed there (or truthfully states that none is shown).
+  ground_truth: null
+  hard_patterns: [date_picker, party_size_dropdown, policy_location]
+  irreversible_stop_words: ["Complete reservation", "Confirm reservation", "Reserve now"]
+
+# ----------------------------------------------------------------------------- Parks: NPS / Recreation.gov
+- id: nps_01
+  site: nps.gov
+  category: parks
+  start_url: https://www.nps.gov
+  instruction: >
+    On NPS.gov, find the current entrance fee for a private vehicle at Yosemite National Park. Report the fee and
+    how long the pass is valid.
+  task_type: lookup
+  success_criteria: >
+    The final page is Yosemite's official fees page on nps.gov and the answer reports the private vehicle entrance
+    fee and validity period shown there.
+  ground_truth: null
+  hard_patterns: [navigation, park_subsite]
+  irreversible_stop_words: []
+
+- id: nps_02
+  site: nps.gov
+  category: parks
+  start_url: https://www.nps.gov
+  instruction: >
+    On NPS.gov, find out whether Tioga Road (Highway 120 through Yosemite) is currently open. Report its current
+    status as stated by the park.
+  task_type: lookup
+  success_criteria: >
+    The final page is an official nps.gov Yosemite page with current road conditions or Tioga Road status, and the
+    answer reports the status shown there.
+  ground_truth: null
+  hard_patterns: [navigation, current_conditions]
+  irreversible_stop_words: []
+
+- id: recgov_01
+  site: recreation.gov
+  category: parks
+  start_url: https://www.recreation.gov
+  instruction: >
+    On Recreation.gov, check availability at Upper Pines Campground in Yosemite for 1 night, arriving
+    {date:next_saturday}. Report whether any campsite is available that night. Do not reserve.
+  task_type: lookup
+  success_criteria: >
+    The final screenshots show Upper Pines Campground's availability view for the requested night, and the answer
+    correctly states whether any site is available, without starting a reservation.
+  ground_truth: null
+  hard_patterns: [date_picker, availability_grid, autocomplete]
+  irreversible_stop_words: ["Book Now", "Reserve", "Add to Cart", "Checkout"]
