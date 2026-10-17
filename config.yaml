@@ -1,12 +1,12 @@
 experiment_name: agent-kb-pilot
-reps_per_task: 3
+reps_per_task: 2
 max_steps: 30
 run_timeout_s: 360
 concurrency:
-  global: 4
-  per_site: 2
+  global: 10
+  per_site: 3
 # Polite pacing between page actions (seconds, uniform random).
-action_delay_s: [1.0, 3.0]
+action_delay_s: [0.3, 1.0]
 browser:
   headless: true
   viewport: [1280, 800]

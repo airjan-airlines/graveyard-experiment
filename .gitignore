@@ -7,3 +7,4 @@ data/
 # Fake-mode (synthetic) outputs
 data_fake/
 out_fake/
+logs/

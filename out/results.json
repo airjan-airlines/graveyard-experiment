@@ -1,0 +1,1530 @@
+{
+ "definitions": {
+  "R": "Runs in a condition excluding terminal_status == error (harness errors are reported separately).",
+  "baseline_failure_rate": "failed(R) / |R| for the baseline condition; 95% Wilson interval.",
+  "pass@1": "Mean judged success over runs in R (overall and per site).",
+  "pass^k": "Fraction of tasks whose every non-error run succeeded (k = reps per task, 3 by default); tasks with zero non-error runs are excluded.",
+  "task_flakiness": "Fraction of tasks with both successes and failures across their non-error runs.",
+  "false_success_rate": "count(agent_claimed_success and judge failed) / count(agent_claimed_success). agent_claimed_success = the agent called done(success=True) without BLOCKED_* and the run ended with status done.",
+  "failure_category_breakdown": "Distribution of the summarizer's failure_category over failed runs in R.",
+  "repeat_failure_rate": "Failures in clusters of size >= 2 / all failures (Method A: structured key (site, category, ui_pattern|page_context); Method B: per-site agglomerative clustering of cause embeddings).",
+  "cross_task_repeat_rate": "Failures in clusters that contain failures from >= 2 different tasks on the same site / all failures.",
+  "knowledge_fixable_share": "fixable == yes / all failures; handoff share reported separately.",
+  "waste": "Total steps, tokens (input + output) and est. cost spent on failed runs, and their share of all baseline spend.",
+  "preventable_tokens": "Tokens spent on failed runs whose failure was classified knowledge-fixable (yes).",
+  "projected_savings": "For each knowledge-fixable failed run: its tokens minus the expected tokens of a successful run of the same task (mean over that task's successful baseline runs, or over all successful baseline runs if the task never succeeded), floored at 0. An estimate of what the KB could save if it converted those failures into successes.",
+  "tokens_per_success": "Total tokens spent in a condition / number of successful runs (cost of one completed task, including the spend on failures it took to get there).",
+  "kb_token_savings": "Total tokens (and tokens per success) with_kb vs baseline on the same tasks and reps; 95% CI from a paired bootstrap over tasks.",
+  "kb_effect": "Success rate baseline vs with_kb (same tasks, model, reps); difference with a paired bootstrap over tasks (10,000 resamples). Mean steps on successful runs in each condition.",
+  "per_category_effect": "For each failure category c: tasks with >= 1 baseline failure of category c; their baseline success rate vs with_kb success rate.",
+  "recovered_failures": "Of tasks that failed >= 1 time in baseline, the fraction whose with_kb success rate is strictly higher.",
+  "regressions": "Tasks whose with_kb success rate is strictly lower than baseline (always listed).",
+  "transfer": "KB built from the agent model's baseline, applied to the transfer model: transfer_baseline vs transfer success rates.",
+  "oracle_fraction": "(with_kb - baseline) / (with_hindsight_kb - baseline) success rates.",
+  "judge_agreement": "Share of the human-labelled judge sample where human_success equals judge_success; Cohen's kappa."
+ },
+ "baseline": {
+  "runs": 48,
+  "success": {
+   "p": 0.20833333333333334,
+   "lo": 0.11730147795889813,
+   "hi": 0.3425917352135348,
+   "k": 10,
+   "n": 48
+  },
+  "failure": {
+   "p": 0.7916666666666666,
+   "lo": 0.6574082647864651,
+   "hi": 0.8826985220411018,
+   "k": 38,
+   "n": 48
+  },
+  "pass@1": {
+   "p": 0.20833333333333334,
+   "lo": 0.11730147795889813,
+   "hi": 0.3425917352135348,
+   "k": 10,
+   "n": 48
+  },
+  "pass^k": {
+   "p": 0.125,
+   "lo": 0.04344255039315584,
+   "hi": 0.3100428814785757,
+   "k": 3,
+   "n": 24
+  },
+  "flakiness": {
+   "p": 0.16666666666666666,
+   "lo": 0.06678568000728924,
+   "hi": 0.3585347038786943,
+   "k": 4,
+   "n": 24
+  },
+  "false_success": {
+   "p": 0.5454545454545454,
+   "lo": 0.34659473289041554,
+   "hi": 0.7307998556799515,
+   "k": 12,
+   "n": 22
+  },
+  "terminal_status": {
+   "done": 46,
+   "blocked_captcha": 1,
+   "max_steps": 1
+  },
+  "per_site": {
+   "allrecipes.com": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "pass^k": 0.0,
+    "tasks": 3
+   },
+   "bart.gov": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.3333333333333333,
+     "lo": 0.09676933255921683,
+     "hi": 0.7000116786584712,
+     "k": 2,
+     "n": 6
+    },
+    "pass^k": 0.0,
+    "tasks": 3
+   },
+   "dmv.ca.gov": {
+    "runs": 2,
+    "pass@1": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.6576280471103807,
+     "k": 0,
+     "n": 2
+    },
+    "pass^k": 0.0,
+    "tasks": 1
+   },
+   "google.com/travel/flights": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "pass^k": 0.0,
+    "tasks": 3
+   },
+   "irs.gov": {
+    "runs": 4,
+    "pass@1": {
+     "p": 0.5,
+     "lo": 0.15003570882017148,
+     "hi": 0.8499642911798285,
+     "k": 2,
+     "n": 4
+    },
+    "pass^k": 0.5,
+    "tasks": 2
+   },
+   "nps.gov": {
+    "runs": 4,
+    "pass@1": {
+     "p": 0.75,
+     "lo": 0.3006360524426366,
+     "hi": 0.9544139373553637,
+     "k": 3,
+     "n": 4
+    },
+    "pass^k": 0.5,
+    "tasks": 2
+   },
+   "opentable.com": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "pass^k": 0.0,
+    "tasks": 3
+   },
+   "recreation.gov": {
+    "runs": 2,
+    "pass@1": {
+     "p": 0.5,
+     "lo": 0.09452865480086614,
+     "hi": 0.9054713451991339,
+     "k": 1,
+     "n": 2
+    },
+    "pass^k": 0.0,
+    "tasks": 1
+   },
+   "rei.com": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "pass^k": 0.0,
+    "tasks": 3
+   },
+   "usps.com": {
+    "runs": 6,
+    "pass@1": {
+     "p": 0.3333333333333333,
+     "lo": 0.09676933255921683,
+     "hi": 0.7000116786584712,
+     "k": 2,
+     "n": 6
+    },
+    "pass^k": 0.3333333333333333,
+    "tasks": 3
+   }
+  },
+  "per_task": {
+   "allrecipes_01": {
+    "success": 0,
+    "n": 2
+   },
+   "allrecipes_02": {
+    "success": 0,
+    "n": 2
+   },
+   "allrecipes_03": {
+    "success": 0,
+    "n": 2
+   },
+   "bart_01": {
+    "success": 0,
+    "n": 2
+   },
+   "bart_02": {
+    "success": 1,
+    "n": 2
+   },
+   "bart_03": {
+    "success": 1,
+    "n": 2
+   },
+   "dmv_01": {
+    "success": 0,
+    "n": 2
+   },
+   "flights_01": {
+    "success": 0,
+    "n": 2
+   },
+   "flights_02": {
+    "success": 0,
+    "n": 2
+   },
+   "flights_03": {
+    "success": 0,
+    "n": 2
+   },
+   "irs_01": {
+    "success": 2,
+    "n": 2
+   },
+   "irs_02": {
+    "success": 0,
+    "n": 2
+   },
+   "nps_01": {
+    "success": 2,
+    "n": 2
+   },
+   "nps_02": {
+    "success": 1,
+    "n": 2
+   },
+   "opentable_01": {
+    "success": 0,
+    "n": 2
+   },
+   "opentable_02": {
+    "success": 0,
+    "n": 2
+   },
+   "opentable_03": {
+    "success": 0,
+    "n": 2
+   },
+   "recgov_01": {
+    "success": 1,
+    "n": 2
+   },
+   "rei_01": {
+    "success": 0,
+    "n": 2
+   },
+   "rei_02": {
+    "success": 0,
+    "n": 2
+   },
+   "rei_03": {
+    "success": 0,
+    "n": 2
+   },
+   "usps_01": {
+    "success": 0,
+    "n": 2
+   },
+   "usps_02": {
+    "success": 2,
+    "n": 2
+   },
+   "usps_03": {
+    "success": 0,
+    "n": 2
+   }
+  },
+  "steps_success_mean": 8.0,
+  "steps_all_mean": 15.041666666666666,
+  "tokens_total": 9379925,
+  "cost_total": 1.63585,
+  "tokens_per_success": 937992.5,
+  "cost_per_success": 0.163585,
+  "tokens_success_mean": 100691.8,
+  "harness_errors": 0
+ },
+ "failures": {
+  "n": 38,
+  "categories": {
+   "navigation": 12,
+   "false_success": 11,
+   "human_handoff": 11,
+   "ui_interaction": 3,
+   "reasoning": 1
+  },
+  "fixable": {
+   "yes": {
+    "p": 0.5526315789473685,
+    "lo": 0.3970602917908942,
+    "hi": 0.6985383468844911,
+    "k": 21,
+    "n": 38
+   },
+   "no": {
+    "p": 0.21052631578947367,
+    "lo": 0.1107466035209593,
+    "hi": 0.36346088376442165,
+    "k": 8,
+    "n": 38
+   },
+   "handoff": {
+    "p": 0.23684210526315788,
+    "lo": 0.12993561496969508,
+    "hi": 0.39207119165337856,
+    "k": 9,
+    "n": 38
+   }
+  },
+  "repeat_A": {
+   "repeat": {
+    "p": 0.2631578947368421,
+    "lo": 0.14971462389701296,
+    "hi": 0.42009150206375323,
+    "k": 10,
+    "n": 38
+   },
+   "cross_task": {
+    "p": 0.15789473684210525,
+    "lo": 0.07443762223722684,
+    "hi": 0.3041712263727689,
+    "k": 6,
+    "n": 38
+   },
+   "n_clusters": 32,
+   "n_clusters_size2plus": 4
+  },
+  "repeat_B": {
+   "repeat": {
+    "p": 0.5526315789473685,
+    "lo": 0.3970602917908942,
+    "hi": 0.6985383468844911,
+    "k": 21,
+    "n": 38
+   },
+   "cross_task": {
+    "p": 0.39473684210526316,
+    "lo": 0.25597859263618905,
+    "hi": 0.5528241300130403,
+    "k": 15,
+    "n": 38
+   },
+   "n_clusters": 25,
+   "n_clusters_size2plus": 8
+  }
+ },
+ "waste": {
+  "failed_runs": 38,
+  "steps": {
+   "wasted": 642,
+   "total": 722,
+   "share": 0.889196675900277
+  },
+  "tokens": {
+   "wasted": 8373007,
+   "total": 9379925,
+   "share": 0.8926518069174327
+  },
+  "cost": {
+   "wasted": 1.46416,
+   "total": 1.63585,
+   "share": 0.8950453892471802
+  },
+  "wasted_by_fixable": {
+   "handoff": {
+    "runs": 9,
+    "tokens": 2606976,
+    "cost": 0.46047999999999994,
+    "steps": 213
+   },
+   "yes": {
+    "runs": 21,
+    "tokens": 4862440,
+    "cost": 0.84343,
+    "steps": 350
+   },
+   "no": {
+    "runs": 8,
+    "tokens": 903591,
+    "cost": 0.16025,
+    "steps": 79
+   }
+  },
+  "preventable_tokens": 4862440,
+  "preventable_share_of_total": 0.5183879402020805,
+  "projected_savings_tokens": 2989640.6,
+  "projected_savings_cost": 0.522543,
+  "projected_savings_share_of_total": 0.31872755912227446,
+  "mean_tokens_failed_run": 220342.2894736842,
+  "mean_tokens_success_run": 100691.8
+ },
+ "top_clusters": {
+  "A": [
+   {
+    "cluster_id": "A|opentable.com|navigation|page:/",
+    "method": "A",
+    "site": "opentable.com",
+    "name": "navigation|page:/",
+    "size": 4,
+    "n_tasks": 3,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__opentable_01__r1",
+     "baseline__openai-gpt-oss-120b__opentable_02__r1",
+     "baseline__openai-gpt-oss-120b__opentable_03__r0",
+     "baseline__openai-gpt-oss-120b__opentable_03__r1"
+    ]
+   },
+   {
+    "cluster_id": "A|google.com/travel/flights|false_success|page:/travel/flights/search",
+    "method": "A",
+    "site": "google.com/travel/flights",
+    "name": "false_success|page:/travel/flights/search",
+    "size": 2,
+    "n_tasks": 2,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__flights_01__r1",
+     "baseline__openai-gpt-oss-120b__flights_02__r1"
+    ]
+   },
+   {
+    "cluster_id": "A|irs.gov|false_success|page:/tax-professionals/standard-mileage-rates",
+    "method": "A",
+    "site": "irs.gov",
+    "name": "false_success|page:/tax-professionals/standard-mileage-rates",
+    "size": 2,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__irs_02__r0",
+     "baseline__openai-gpt-oss-120b__irs_02__r1"
+    ]
+   },
+   {
+    "cluster_id": "A|rei.com|navigation|page:/c/womens-hiking-boots",
+    "method": "A",
+    "site": "rei.com",
+    "name": "navigation|page:/c/womens-hiking-boots",
+    "size": 2,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__rei_02__r0",
+     "baseline__openai-gpt-oss-120b__rei_02__r1"
+    ]
+   },
+   {
+    "cluster_id": "A|allrecipes.com|human_handoff|ui:captcha",
+    "method": "A",
+    "site": "allrecipes.com",
+    "name": "human_handoff|ui:captcha",
+    "size": 1,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__allrecipes_01__r0"
+    ]
+   },
+   {
+    "cluster_id": "A|allrecipes.com|human_handoff|page:/http://www.allrecipes.com/recipe/:id/best-chocolate-chip-cookies",
+    "method": "A",
+    "site": "allrecipes.com",
+    "name": "human_handoff|page:/http://www.allrecipes.com/recipe/:id/best-chocolate-chip-cookies",
+    "size": 1,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__allrecipes_01__r1"
+    ]
+   },
+   {
+    "cluster_id": "A|allrecipes.com|human_handoff|ui:cloudflare_captcha",
+    "method": "A",
+    "site": "allrecipes.com",
+    "name": "human_handoff|ui:cloudflare_captcha",
+    "size": 1,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__allrecipes_02__r0"
+    ]
+   },
+   {
+    "cluster_id": "A|allrecipes.com|human_handoff|ui:cloudflare_challenge",
+    "method": "A",
+    "site": "allrecipes.com",
+    "name": "human_handoff|ui:cloudflare_challenge",
+    "size": 1,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__allrecipes_02__r1"
+    ]
+   }
+  ],
+  "B": [
+   {
+    "cluster_id": "B|allrecipes.com|0",
+    "method": "B",
+    "site": "allrecipes.com",
+    "name": "Cloudflare challenge blocks Allrecipes access",
+    "size": 5,
+    "n_tasks": 3,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__allrecipes_01__r0",
+     "baseline__openai-gpt-oss-120b__allrecipes_01__r1",
+     "baseline__openai-gpt-oss-120b__allrecipes_02__r1",
+     "baseline__openai-gpt-oss-120b__allrecipes_03__r0",
+     "baseline__openai-gpt-oss-120b__allrecipes_03__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|opentable.com|0",
+    "method": "B",
+    "site": "opentable.com",
+    "name": "HTTP/2 Protocol Error blocking OpenTable",
+    "size": 3,
+    "n_tasks": 2,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__opentable_01__r0",
+     "baseline__openai-gpt-oss-120b__opentable_01__r1",
+     "baseline__openai-gpt-oss-120b__opentable_03__r0"
+    ]
+   },
+   {
+    "cluster_id": "B|rei.com|0",
+    "method": "B",
+    "site": "rei.com",
+    "name": "Site navigation blocked by HTTP error",
+    "size": 3,
+    "n_tasks": 2,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__rei_01__r0",
+     "baseline__openai-gpt-oss-120b__rei_03__r0",
+     "baseline__openai-gpt-oss-120b__rei_03__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|google.com/travel/flights|0",
+    "method": "B",
+    "site": "google.com/travel/flights",
+    "name": "False extraction of price from empty results",
+    "size": 2,
+    "n_tasks": 2,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__flights_01__r0",
+     "baseline__openai-gpt-oss-120b__flights_03__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|opentable.com|1",
+    "method": "B",
+    "site": "opentable.com",
+    "name": "OpenTable site unreachable due to HTTP2 errors",
+    "size": 2,
+    "n_tasks": 2,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__opentable_02__r1",
+     "baseline__openai-gpt-oss-120b__opentable_03__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|google.com/travel/flights|2",
+    "method": "B",
+    "site": "google.com/travel/flights",
+    "name": "Fabricated flight information when none listed",
+    "size": 2,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__flights_02__r0",
+     "baseline__openai-gpt-oss-120b__flights_02__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|irs.gov|0",
+    "method": "B",
+    "site": "irs.gov",
+    "name": "Unverified mileage rate claim",
+    "size": 2,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__irs_02__r0",
+     "baseline__openai-gpt-oss-120b__irs_02__r1"
+    ]
+   },
+   {
+    "cluster_id": "B|usps.com|0",
+    "method": "B",
+    "site": "usps.com",
+    "name": "Failed to open detail view",
+    "size": 2,
+    "n_tasks": 1,
+    "member_run_ids": [
+     "baseline__openai-gpt-oss-120b__usps_03__r0",
+     "baseline__openai-gpt-oss-120b__usps_03__r1"
+    ]
+   }
+  ]
+ },
+ "kb_effect": {
+  "a": {
+   "runs": 48,
+   "success": {
+    "p": 0.20833333333333334,
+    "lo": 0.11730147795889813,
+    "hi": 0.3425917352135348,
+    "k": 10,
+    "n": 48
+   },
+   "failure": {
+    "p": 0.7916666666666666,
+    "lo": 0.6574082647864651,
+    "hi": 0.8826985220411018,
+    "k": 38,
+    "n": 48
+   },
+   "pass@1": {
+    "p": 0.20833333333333334,
+    "lo": 0.11730147795889813,
+    "hi": 0.3425917352135348,
+    "k": 10,
+    "n": 48
+   },
+   "pass^k": {
+    "p": 0.125,
+    "lo": 0.04344255039315584,
+    "hi": 0.3100428814785757,
+    "k": 3,
+    "n": 24
+   },
+   "flakiness": {
+    "p": 0.16666666666666666,
+    "lo": 0.06678568000728924,
+    "hi": 0.3585347038786943,
+    "k": 4,
+    "n": 24
+   },
+   "false_success": {
+    "p": 0.5454545454545454,
+    "lo": 0.34659473289041554,
+    "hi": 0.7307998556799515,
+    "k": 12,
+    "n": 22
+   },
+   "terminal_status": {
+    "done": 46,
+    "blocked_captcha": 1,
+    "max_steps": 1
+   },
+   "per_site": {
+    "allrecipes.com": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.3903430336530645,
+      "k": 0,
+      "n": 6
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "bart.gov": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.3333333333333333,
+      "lo": 0.09676933255921683,
+      "hi": 0.7000116786584712,
+      "k": 2,
+      "n": 6
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "dmv.ca.gov": {
+     "runs": 2,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.6576280471103807,
+      "k": 0,
+      "n": 2
+     },
+     "pass^k": 0.0,
+     "tasks": 1
+    },
+    "google.com/travel/flights": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.3903430336530645,
+      "k": 0,
+      "n": 6
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "irs.gov": {
+     "runs": 4,
+     "pass@1": {
+      "p": 0.5,
+      "lo": 0.15003570882017148,
+      "hi": 0.8499642911798285,
+      "k": 2,
+      "n": 4
+     },
+     "pass^k": 0.5,
+     "tasks": 2
+    },
+    "nps.gov": {
+     "runs": 4,
+     "pass@1": {
+      "p": 0.75,
+      "lo": 0.3006360524426366,
+      "hi": 0.9544139373553637,
+      "k": 3,
+      "n": 4
+     },
+     "pass^k": 0.5,
+     "tasks": 2
+    },
+    "opentable.com": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.3903430336530645,
+      "k": 0,
+      "n": 6
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "recreation.gov": {
+     "runs": 2,
+     "pass@1": {
+      "p": 0.5,
+      "lo": 0.09452865480086614,
+      "hi": 0.9054713451991339,
+      "k": 1,
+      "n": 2
+     },
+     "pass^k": 0.0,
+     "tasks": 1
+    },
+    "rei.com": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.3903430336530645,
+      "k": 0,
+      "n": 6
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "usps.com": {
+     "runs": 6,
+     "pass@1": {
+      "p": 0.3333333333333333,
+      "lo": 0.09676933255921683,
+      "hi": 0.7000116786584712,
+      "k": 2,
+      "n": 6
+     },
+     "pass^k": 0.3333333333333333,
+     "tasks": 3
+    }
+   },
+   "per_task": {
+    "allrecipes_01": {
+     "success": 0,
+     "n": 2
+    },
+    "allrecipes_02": {
+     "success": 0,
+     "n": 2
+    },
+    "allrecipes_03": {
+     "success": 0,
+     "n": 2
+    },
+    "bart_01": {
+     "success": 0,
+     "n": 2
+    },
+    "bart_02": {
+     "success": 1,
+     "n": 2
+    },
+    "bart_03": {
+     "success": 1,
+     "n": 2
+    },
+    "dmv_01": {
+     "success": 0,
+     "n": 2
+    },
+    "flights_01": {
+     "success": 0,
+     "n": 2
+    },
+    "flights_02": {
+     "success": 0,
+     "n": 2
+    },
+    "flights_03": {
+     "success": 0,
+     "n": 2
+    },
+    "irs_01": {
+     "success": 2,
+     "n": 2
+    },
+    "irs_02": {
+     "success": 0,
+     "n": 2
+    },
+    "nps_01": {
+     "success": 2,
+     "n": 2
+    },
+    "nps_02": {
+     "success": 1,
+     "n": 2
+    },
+    "opentable_01": {
+     "success": 0,
+     "n": 2
+    },
+    "opentable_02": {
+     "success": 0,
+     "n": 2
+    },
+    "opentable_03": {
+     "success": 0,
+     "n": 2
+    },
+    "recgov_01": {
+     "success": 1,
+     "n": 2
+    },
+    "rei_01": {
+     "success": 0,
+     "n": 2
+    },
+    "rei_02": {
+     "success": 0,
+     "n": 2
+    },
+    "rei_03": {
+     "success": 0,
+     "n": 2
+    },
+    "usps_01": {
+     "success": 0,
+     "n": 2
+    },
+    "usps_02": {
+     "success": 2,
+     "n": 2
+    },
+    "usps_03": {
+     "success": 0,
+     "n": 2
+    }
+   },
+   "steps_success_mean": 8.0,
+   "steps_all_mean": 15.041666666666666,
+   "tokens_total": 9379925,
+   "cost_total": 1.63585,
+   "tokens_per_success": 937992.5,
+   "cost_per_success": 0.163585,
+   "tokens_success_mean": 100691.8
+  },
+  "b": {
+   "runs": 24,
+   "success": {
+    "p": 0.125,
+    "lo": 0.04344255039315584,
+    "hi": 0.3100428814785757,
+    "k": 3,
+    "n": 24
+   },
+   "failure": {
+    "p": 0.875,
+    "lo": 0.6899571185214243,
+    "hi": 0.9565574496068442,
+    "k": 21,
+    "n": 24
+   },
+   "pass@1": {
+    "p": 0.125,
+    "lo": 0.04344255039315584,
+    "hi": 0.3100428814785757,
+    "k": 3,
+    "n": 24
+   },
+   "pass^k": {
+    "p": 0.125,
+    "lo": 0.04344255039315584,
+    "hi": 0.3100428814785757,
+    "k": 3,
+    "n": 24
+   },
+   "flakiness": {
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.13798057582897535,
+    "k": 0,
+    "n": 24
+   },
+   "false_success": {
+    "p": 0.7,
+    "lo": 0.39677321997956516,
+    "hi": 0.892210712513788,
+    "k": 7,
+    "n": 10
+   },
+   "terminal_status": {
+    "done": 22,
+    "blocked_captcha": 1,
+    "max_steps": 1
+   },
+   "per_site": {
+    "allrecipes.com": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.5615060804490177,
+      "k": 0,
+      "n": 3
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "bart.gov": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.3333333333333333,
+      "lo": 0.0614903152761605,
+      "hi": 0.7923450448735121,
+      "k": 1,
+      "n": 3
+     },
+     "pass^k": 0.3333333333333333,
+     "tasks": 3
+    },
+    "dmv.ca.gov": {
+     "runs": 1,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.7934567085261071,
+      "k": 0,
+      "n": 1
+     },
+     "pass^k": 0.0,
+     "tasks": 1
+    },
+    "google.com/travel/flights": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.5615060804490177,
+      "k": 0,
+      "n": 3
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "irs.gov": {
+     "runs": 2,
+     "pass@1": {
+      "p": 0.5,
+      "lo": 0.09452865480086614,
+      "hi": 0.9054713451991339,
+      "k": 1,
+      "n": 2
+     },
+     "pass^k": 0.5,
+     "tasks": 2
+    },
+    "nps.gov": {
+     "runs": 2,
+     "pass@1": {
+      "p": 0.5,
+      "lo": 0.09452865480086614,
+      "hi": 0.9054713451991339,
+      "k": 1,
+      "n": 2
+     },
+     "pass^k": 0.5,
+     "tasks": 2
+    },
+    "opentable.com": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.5615060804490177,
+      "k": 0,
+      "n": 3
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "recreation.gov": {
+     "runs": 1,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.7934567085261071,
+      "k": 0,
+      "n": 1
+     },
+     "pass^k": 0.0,
+     "tasks": 1
+    },
+    "rei.com": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.5615060804490177,
+      "k": 0,
+      "n": 3
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    },
+    "usps.com": {
+     "runs": 3,
+     "pass@1": {
+      "p": 0.0,
+      "lo": 0.0,
+      "hi": 0.5615060804490177,
+      "k": 0,
+      "n": 3
+     },
+     "pass^k": 0.0,
+     "tasks": 3
+    }
+   },
+   "per_task": {
+    "allrecipes_01": {
+     "success": 0,
+     "n": 1
+    },
+    "allrecipes_02": {
+     "success": 0,
+     "n": 1
+    },
+    "allrecipes_03": {
+     "success": 0,
+     "n": 1
+    },
+    "bart_01": {
+     "success": 0,
+     "n": 1
+    },
+    "bart_02": {
+     "success": 0,
+     "n": 1
+    },
+    "bart_03": {
+     "success": 1,
+     "n": 1
+    },
+    "dmv_01": {
+     "success": 0,
+     "n": 1
+    },
+    "flights_01": {
+     "success": 0,
+     "n": 1
+    },
+    "flights_02": {
+     "success": 0,
+     "n": 1
+    },
+    "flights_03": {
+     "success": 0,
+     "n": 1
+    },
+    "irs_01": {
+     "success": 1,
+     "n": 1
+    },
+    "irs_02": {
+     "success": 0,
+     "n": 1
+    },
+    "nps_01": {
+     "success": 0,
+     "n": 1
+    },
+    "nps_02": {
+     "success": 1,
+     "n": 1
+    },
+    "opentable_01": {
+     "success": 0,
+     "n": 1
+    },
+    "opentable_02": {
+     "success": 0,
+     "n": 1
+    },
+    "opentable_03": {
+     "success": 0,
+     "n": 1
+    },
+    "recgov_01": {
+     "success": 0,
+     "n": 1
+    },
+    "rei_01": {
+     "success": 0,
+     "n": 1
+    },
+    "rei_02": {
+     "success": 0,
+     "n": 1
+    },
+    "rei_03": {
+     "success": 0,
+     "n": 1
+    },
+    "usps_01": {
+     "success": 0,
+     "n": 1
+    },
+    "usps_02": {
+     "success": 0,
+     "n": 1
+    },
+    "usps_03": {
+     "success": 0,
+     "n": 1
+    }
+   },
+   "steps_success_mean": 15.666666666666666,
+   "steps_all_mean": 17.791666666666668,
+   "tokens_total": 5489931,
+   "cost_total": 0.95277,
+   "tokens_per_success": 1829977.0,
+   "cost_per_success": 0.31759,
+   "tokens_success_mean": 188291.66666666666
+  },
+  "success_diff": {
+   "diff": -0.08333333333333334,
+   "lo": -0.22916666666666666,
+   "hi": 0.041666666666666685,
+   "n_tasks": 24
+  },
+  "steps_success": {
+   "a": 8.0,
+   "b": 15.666666666666666,
+   "pct_change": 0.9583333333333333
+  },
+  "tokens": {
+   "a_total": 9379925,
+   "b_total": 5489931,
+   "total_pct_change": -0.41471482980940677,
+   "mean_per_run_diff": {
+    "diff": 33332.02083333334,
+    "lo": -11381.541666666686,
+    "hi": 77380.64583333334,
+    "n_tasks": 24
+   },
+   "a_per_success": 937992.5,
+   "b_per_success": 1829977.0,
+   "per_success_pct_change": 0.9509505673019774,
+   "a_cost_per_success": 0.163585,
+   "b_cost_per_success": 0.31759
+  },
+  "recovered": {
+   "tasks": [
+    "bart_03",
+    "nps_02"
+   ],
+   "n_failed_tasks": 21,
+   "share": {
+    "p": 0.09523809523809523,
+    "lo": 0.026518208796947246,
+    "hi": 0.2891458386074067,
+    "k": 2,
+    "n": 21
+   }
+  },
+  "regressions": [
+   {
+    "task_id": "bart_02",
+    "baseline": 0.5,
+    "with_kb": 0.0
+   },
+   {
+    "task_id": "nps_01",
+    "baseline": 1.0,
+    "with_kb": 0.0
+   },
+   {
+    "task_id": "recgov_01",
+    "baseline": 0.5,
+    "with_kb": 0.0
+   },
+   {
+    "task_id": "usps_02",
+    "baseline": 1.0,
+    "with_kb": 0.0
+   }
+  ],
+  "per_site": {
+   "allrecipes.com": {
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   },
+   "bart.gov": {
+    "a": {
+     "p": 0.3333333333333333,
+     "lo": 0.09676933255921683,
+     "hi": 0.7000116786584712,
+     "k": 2,
+     "n": 6
+    },
+    "b": {
+     "p": 0.3333333333333333,
+     "lo": 0.0614903152761605,
+     "hi": 0.7923450448735121,
+     "k": 1,
+     "n": 3
+    }
+   },
+   "dmv.ca.gov": {
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.6576280471103807,
+     "k": 0,
+     "n": 2
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.7934567085261071,
+     "k": 0,
+     "n": 1
+    }
+   },
+   "google.com/travel/flights": {
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   },
+   "irs.gov": {
+    "a": {
+     "p": 0.5,
+     "lo": 0.15003570882017148,
+     "hi": 0.8499642911798285,
+     "k": 2,
+     "n": 4
+    },
+    "b": {
+     "p": 0.5,
+     "lo": 0.09452865480086614,
+     "hi": 0.9054713451991339,
+     "k": 1,
+     "n": 2
+    }
+   },
+   "nps.gov": {
+    "a": {
+     "p": 0.75,
+     "lo": 0.3006360524426366,
+     "hi": 0.9544139373553637,
+     "k": 3,
+     "n": 4
+    },
+    "b": {
+     "p": 0.5,
+     "lo": 0.09452865480086614,
+     "hi": 0.9054713451991339,
+     "k": 1,
+     "n": 2
+    }
+   },
+   "opentable.com": {
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   },
+   "recreation.gov": {
+    "a": {
+     "p": 0.5,
+     "lo": 0.09452865480086614,
+     "hi": 0.9054713451991339,
+     "k": 1,
+     "n": 2
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.7934567085261071,
+     "k": 0,
+     "n": 1
+    }
+   },
+   "rei.com": {
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3903430336530645,
+     "k": 0,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   },
+   "usps.com": {
+    "a": {
+     "p": 0.3333333333333333,
+     "lo": 0.09676933255921683,
+     "hi": 0.7000116786584712,
+     "k": 2,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   }
+  },
+  "per_category": {
+   "false_success": {
+    "tasks": 8,
+    "a": {
+     "p": 0.125,
+     "lo": 0.034976749337057134,
+     "hi": 0.3602333143674828,
+     "k": 2,
+     "n": 16
+    },
+    "b": {
+     "p": 0.125,
+     "lo": 0.02241690886329617,
+     "hi": 0.4708948057698615,
+     "k": 1,
+     "n": 8
+    }
+   },
+   "human_handoff": {
+    "tasks": 8,
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.19361341827271994,
+     "k": 0,
+     "n": 16
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.3244156195108769,
+     "k": 0,
+     "n": 8
+    }
+   },
+   "navigation": {
+    "tasks": 9,
+    "a": {
+     "p": 0.05555555555555555,
+     "lo": 0.009874935830924525,
+     "hi": 0.2575779980200754,
+     "k": 1,
+     "n": 18
+    },
+    "b": {
+     "p": 0.1111111111111111,
+     "lo": 0.019890371327130535,
+     "hi": 0.4350062147680601,
+     "k": 1,
+     "n": 9
+    }
+   },
+   "reasoning": {
+    "tasks": 1,
+    "a": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.6576280471103807,
+     "k": 0,
+     "n": 2
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.7934567085261071,
+     "k": 0,
+     "n": 1
+    }
+   },
+   "ui_interaction": {
+    "tasks": 3,
+    "a": {
+     "p": 0.16666666666666666,
+     "lo": 0.03005258587173032,
+     "hi": 0.563509436563646,
+     "k": 1,
+     "n": 6
+    },
+    "b": {
+     "p": 0.0,
+     "lo": 0.0,
+     "hi": 0.5615060804490177,
+     "k": 0,
+     "n": 3
+    }
+   }
+  },
+  "n_tasks": 24,
+  "harness_errors": 0
+ },
+ "judge_validation": {
+  "status": "judge not yet validated",
+  "sample_size": 20
+ },
+ "kb": {
+  "entries_frozen": 17,
+  "rejected_drafts": 0
+ },
+ "analysis_spend": {
+  "classify": {
+   "calls": 38,
+   "input_tokens": 19139,
+   "output_tokens": 11669,
+   "cost": 0.009872249999999999
+  },
+  "cluster_name": {
+   "calls": 8,
+   "input_tokens": 2205,
+   "output_tokens": 1165,
+   "cost": 0.0010297499999999998
+  },
+  "judge": {
+   "calls": 73,
+   "input_tokens": 234809,
+   "output_tokens": 22093,
+   "cost": 0.04847715
+  },
+  "kb_write": {
+   "calls": 17,
+   "input_tokens": 12187,
+   "output_tokens": 8829,
+   "cost": 0.00712545
+  },
+  "summarize": {
+   "calls": 38,
+   "input_tokens": 171648,
+   "output_tokens": 18686,
+   "cost": 0.0369588
+  }
+ },
+ "synthetic": false
+}

@@ -1,0 +1,356 @@
+[
+ {
+  "id": "kb_000001",
+  "site": "bart.gov",
+  "task_pattern": "Check BART elevator status for a given station",
+  "applies_when": "Before accessing elevator status information",
+  "note": "Open https://www.bart.gov/about/alerts/elevator-status or use the \"Ride \u2192 Elevator Status\" link from the homepage. Do not construct custom URLs. Wait for the page to load fully, then locate the entry labeled \"MacArthur\" in the station list. Read the outage column for that row; if it says \"No outages\" report none, otherwise report the listed outage details. Do not click any links on the page that lead away from the status table.",
+  "success_signal": "A table containing a row with \"MacArthur\" and an outage status (e.g., \"No outages\" or specific outage description) is visible",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__bart_03__r1"
+  ],
+  "source_failure_categories": [
+   "navigation"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:03.566506+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000002",
+  "site": "bart.gov",
+  "task_pattern": "Retrieve trip itinerary using BART trip planner",
+  "applies_when": "Before attempting to load trip results, after opening the main planner page",
+  "note": "Start at https://www.bart.gov/planner, wait for the trip planner form to load, then enter origin, destination, date, and time using the form fields, click the 'Plan my trip' button, and read the itinerary list that appears. Do not construct or navigate directly to a URL with query parameters, as those URLs require an active session and return a Permission\u202fDenied page. Ensure the page shows a list of itineraries before extracting departure time and transfer count.",
+  "success_signal": "A results page displaying a list of itineraries with departure times and transfer information",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__bart_01__r1"
+  ],
+  "source_failure_categories": [
+   "navigation"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:03.972717+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000003",
+  "site": "bart.gov",
+  "task_pattern": "Retrieve BART fare between two stations",
+  "applies_when": "After selecting origin and destination stations but before extracting the fare",
+  "note": "Click the 'Calculate Fare' button after setting both stations. Wait for the fare result area to populate. Only read the fare once the result element shows a numeric value. If the result area is empty, repeat the click. Do not proceed until the fare is visible.",
+  "success_signal": "Fare result element contains a numeric value (e.g., $X.XX)",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__bart_02__r1"
+  ],
+  "source_failure_categories": [
+   "ui_interaction"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:03.354968+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000004",
+  "site": "bart.gov",
+  "task_pattern": "Find a BART trip using the trip planner with specific departure date and time",
+  "applies_when": "Before filling the departure date and time fields in the trip planner",
+  "note": "Do not type a date or time into the departure fields; click the calendar icon next to the date field and select the desired date, then click the time dropdown and choose the required time before submitting the query. Ensure the selected date appears in the field and the time dropdown shows the chosen time. After selection, press the 'Plan Trip' button. Verify that the displayed summary shows the correct date and time before proceeding.",
+  "success_signal": "The departure date field displays the chosen date and the time dropdown shows the selected time, and the trip results page lists trips for that date/time",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__bart_01__r0"
+  ],
+  "source_failure_categories": [
+   "ui_interaction"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:03.642822+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000005",
+  "site": "dmv.ca.gov",
+  "task_pattern": "Locate eligibility criteria and fee for standard driver's license renewal",
+  "applies_when": "When on the DMV driver license renewal page before extracting any eligibility or fee information",
+  "note": "Do not assume eligibility or fee values unless they appear in explicit text on the page. Search for headings such as \"Eligibility\", \"Who can renew online\", or a \"Fees\" table. If the page only lists payment methods or lacks an eligibility section, record that the information is not provided. Only capture exact wording; avoid extrapolation. Stop before clicking any payment or submission button.",
+  "success_signal": "Presence of an \"Eligibility\" section with bullet points or a \"Fees\" table showing a dollar amount, or a clear statement that eligibility/fees are not listed.",
+  "irreversible_steps": [
+   "Pay Now",
+   "Submit Payment",
+   "Confirm Purchase"
+  ],
+  "handoff_points": [
+   "Login required",
+   "CAPTCHA"
+  ],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__dmv_01__r1"
+  ],
+  "source_failure_categories": [
+   "reasoning"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:04.772276+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000006",
+  "site": "dmv.ca.gov",
+  "task_pattern": "Locate eligibility and fee details for online driver license renewal",
+  "applies_when": "When beginning a task to find renewal information on the California DMV site",
+  "note": "From the homepage, click the 'Driver License' menu and select 'Renew Your Driver License'. On the resulting page, scroll to the section titled 'Online Renewal'. Copy the exact bullet points that list the eligibility criteria and the renewal fee verbatim. Do not rely on summaries from other pages or assume the information is elsewhere.",
+  "success_signal": "Page title 'Renew Your Driver License' is displayed and an 'Online Renewal' heading with bullet points showing eligibility and fee is visible",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__dmv_01__r0"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:04.694169+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000007",
+  "site": "google.com/travel/flights",
+  "task_pattern": "Search for flight options on Google Flights and report cheapest price",
+  "applies_when": "after clicking the search button and the loading spinner disappears",
+  "note": "Wait until the flight results grid appears before extracting any data. Verify that at least one flight card with airline name and price is visible. If no cards are shown, scroll the page or wait a few seconds for lazy loading. Do not read prices from the loading indicator or header. Only extract data after the result cards are fully rendered.",
+  "success_signal": "flight result cards displaying airline names and prices are present",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__flights_01__r0",
+   "baseline__openai-gpt-oss-120b__flights_03__r1"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:04.694617+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000008",
+  "site": "google.com/travel/flights",
+  "task_pattern": "Find earliest departing flight for a specific route and date on Google Travel",
+  "applies_when": "After entering origin, destination, date and clicking Search, once the results section has loaded",
+  "note": "Wait for the flight results list to appear. Verify that at least one flight row is present before extracting any time or airline. If a \u201cNo flights found\u201d or empty list message is shown, report that no flights are available. Do not assume a default flight when the list is empty. Only read the departure time and airline from the first listed flight.",
+  "success_signal": "A list of flight result rows is visible (or a clear \u201cNo flights found\u201d message)",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__flights_02__r0",
+   "baseline__openai-gpt-oss-120b__flights_02__r1"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:05.536012+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000009",
+  "site": "google.com/travel/flights",
+  "task_pattern": "Find cheapest nonstop round\u2011trip flight and report airline and price",
+  "applies_when": "After filling origin, destination, and dates but before marking task complete",
+  "note": "Enter origin and destination airports in the top fields, set the travel dates, then click the Search button. Wait until the flight results container loads and displays at least one flight card. Identify the first card that has the \"Nonstop\" label; it is usually the cheapest nonstop option. Record the airline name shown on that card and the total round\u2011trip price displayed. Do not click any \"Select\" or \"Continue\" buttons.",
+  "success_signal": "A scrollable list of flight cards appears below the date selectors, each showing airline, stops, and total price",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__flights_01__r1"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:05.854946+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000010",
+  "site": "irs.gov",
+  "task_pattern": "Locate and report the current IRS standard mileage rate for business use",
+  "applies_when": "When the agent is on the IRS 'Standard Mileage Rates' page and needs to extract the rate",
+  "note": "Navigate via the main menu to Tools\u202f\u2192\u202fStandard Mileage Rates or use the direct URL ending in '/standard-mileage-rates'. Wait for the page to fully load and locate the table titled 'Standard Mileage Rates'. Find the row for the current tax year and read the value under the 'Business' column. Confirm that this value appears in the table before answering.",
+  "success_signal": "A table titled 'Standard Mileage Rates' containing a row labeled with the current year and a column labeled 'Business' showing a numeric rate",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__irs_02__r0",
+   "baseline__openai-gpt-oss-120b__irs_02__r1"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:05.905828+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000011",
+  "site": "nps.gov",
+  "task_pattern": "Check current status of a specific road on NPS.gov",
+  "applies_when": "After opening a park\u2019s main page and before reading any alerts",
+  "note": "Navigate to the park\u2019s \u201cRoad Conditions\u201d or \u201cCurrent Closures\u201d section via the top navigation or sidebar. Locate the entry for the target road (e.g., Tioga Road) and read the explicit status line. Do not infer status from unrelated alerts such as overnight\u2011parking notices. Confirm the status text reads \u201copen\u201d, \u201cclosed\u201d, or similar before reporting. If the road is not listed, report that no current status is available.",
+  "success_signal": "A line on the Road Conditions/Current Closures page that reads \u201cTioga Road is open\u201d or \u201cTioga Road is closed\u201d.",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__nps_02__r0"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:06.096308+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000012",
+  "site": "recreation.gov",
+  "task_pattern": "Check campsite availability for a specific date at a campground on Recreation.gov without reserving",
+  "applies_when": "After opening the campground page and before concluding availability",
+  "note": "Click the \"Check Availability\" button or open the calendar widget, then select the desired year and navigate to the month containing the target date. If the date is not shown on the calendar, use the \"Custom Date\" option to enter it manually. Once the date is selected, wait for the availability table or calendar to refresh and read the status of each site. Look for green \"Available\" markers or rows labeled \"Available\" to determine open campsites. Do not infer availability without viewing this refreshed view.",
+  "success_signal": "Calendar shows green \"Available\" markers or the availability table lists sites with status \"Available\" for the selected date",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__recgov_01__r1"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:06.530711+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000013",
+  "site": "rei.com",
+  "task_pattern": "List women's hiking boots with specific filters and retrieve result count",
+  "applies_when": "Before navigating to the women's hiking boots listing page",
+  "note": "Do not use the direct '/women/hiking-boots' URL; instead open the homepage, go to 'Footwear'\u202f\u2192\u202f'Women'\u202f\u2192\u202f'Hiking Boots' or search for \"women's hiking boots\". After the listing loads, apply the 'Waterproof' filter, select size\u202f8, and set the price maximum to $150. Verify that the filter chips appear active before reading the result count. If a filter does not stick, repeat the selection using the sidebar controls.",
+  "success_signal": "The page shows a results header like \"X results\" and displays active filter tags for Waterproof, Size\u202f8, and $150 max",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__rei_02__r0"
+  ],
+  "source_failure_categories": [
+   "navigation"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:07.180313+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000014",
+  "site": "rei.com",
+  "task_pattern": "Search REI.com for a product, choose size and color, and read price and shipping availability",
+  "applies_when": "At the start of the task, after opening rei.com, before using any external search engine",
+  "note": "Use the search bar at the top of the REI homepage to enter the product name. Click the correct product from the results to open its detail page. On the product page, use the size selector to choose \"M\" and the color selector to choose \"Black\" (if Black is not listed, note its absence and choose any available color). After selections, read the displayed price and the availability message (e.g., \"In stock\" or \"Ships from\"). Do not click any \"Add to Cart\" or purchase buttons.",
+  "success_signal": "Product detail page shows the selected size M and color Black (or chosen alternative) with a price displayed and an availability status such as \"In stock\" or \"Ships from\"",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__rei_01__r1"
+  ],
+  "source_failure_categories": [
+   "human_handoff"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:07.419960+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000015",
+  "site": "usps.com",
+  "task_pattern": "Locate nearest post office via USPS Find a Post Office tool and extract its name and Saturday retail hours",
+  "applies_when": "When the ZIP code search results list is displayed after submitting the ZIP code",
+  "note": "Enter the ZIP code and submit the search, then click the desired post office entry to open its detail page; the name and Saturday retail hours are only available on that detail page. Ensure the detail page header shows the post office name and that a 'Saturday' row appears in the hours table before extracting the data. Do not attempt to read the name or Saturday hours from the summary list.",
+  "success_signal": "Detail page shows the post office name in the header and a 'Saturday' entry under the hours table",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__usps_03__r0",
+   "baseline__openai-gpt-oss-120b__usps_03__r1"
+  ],
+  "source_failure_categories": [
+   "navigation",
+   "ui_interaction"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:07.406428+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000016",
+  "site": "usps.com",
+  "task_pattern": "Retrieve ZIP Code via USPS ZIP Code Lookup",
+  "applies_when": "When opening the USPS ZIP Code Lookup page and preparing to submit an address",
+  "note": "Navigate directly to https://tools.usps.com/zip-code-lookup.htm; do not follow any external search redirects. Enter the street address, city, and state into the provided fields exactly as given. Click the \"Find\" button to submit. If a CAPTCHA appears, cease automation and hand off to a human. The result page must display a results table containing the 5\u2011digit ZIP Code for the entered address.",
+  "success_signal": "Results table appears showing the 5\u2011digit ZIP Code for the entered address",
+  "irreversible_steps": [],
+  "handoff_points": [
+   "CAPTCHA challenge"
+  ],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__usps_01__r1"
+  ],
+  "source_failure_categories": [
+   "human_handoff"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:07.343979+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ },
+ {
+  "id": "kb_000017",
+  "site": "usps.com",
+  "task_pattern": "Lookup ZIP Code for an address via USPS ZIP Code Lookup",
+  "applies_when": "After submitting the address and the results panel loads",
+  "note": "Enter the full street address, city, and state into the fields, then click the \"Find\" button. Wait for the results panel to appear. Locate the field labeled \"ZIP Code\" in the results. Read the 5-digit number shown there and use that as the answer. Do not assume a default ZIP; only report the number that is actually displayed.",
+  "success_signal": "Results panel shows a 5-digit number in the field labeled \"ZIP Code\".",
+  "irreversible_steps": [],
+  "handoff_points": [],
+  "source_run_ids": [
+   "baseline__openai-gpt-oss-120b__usps_01__r0"
+  ],
+  "source_failure_categories": [
+   "false_success"
+  ],
+  "source": "failure",
+  "created_at": "2026-10-17T20:53:08.678059+00:00",
+  "times_used": 0,
+  "times_used_success": 0
+ }
+]

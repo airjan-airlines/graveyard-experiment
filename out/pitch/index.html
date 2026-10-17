@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Repeat-Failure Pilot</title>
+<style>
+  :root { --sp-measure: 72ch; }
+  body { margin: 0; }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 20px 80px; }
+  .lede { font-size: 1.15rem; color: var(--sp-muted); max-width: var(--sp-measure); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--sp-surface); border-radius: var(--sp-radius); padding: 16px; }
+  .stat b { display: block; font-size: 2rem; line-height: 1.1; }
+  .stat span { color: var(--sp-muted); font-size: .92rem; }
+  .wide { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--sp-border); vertical-align: top; }
+  th { color: var(--sp-muted); font-weight: 600; }
+  figure { margin: 20px 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--sp-border); border-radius: var(--sp-radius); }
+  figcaption { color: var(--sp-muted); font-size: .9rem; margin-top: 6px; }
+  .note { border-left: 3px solid var(--sp-chart-2); padding: 4px 14px; margin: 18px 0; }
+  .use { color: var(--sp-chart-3); font-weight: 600; }
+  .avoid { color: var(--sp-chart-2); font-weight: 600; }
+  p, li { max-width: var(--sp-measure); }
+</style>
+</head>
+<body class="auto">
+<main>
+<h1>Do web agents keep making the same mistakes?</h1>
+<p class="lede">A pilot measuring how often AI browser agents fail everyday web tasks, whether those failures repeat, and whether a shared knowledge base of site-specific notes helps. Run on 17 Oct 2026 with real agents on live websites. All numbers come from the experiment database.</p>
+
+<h2>Headline (baseline)</h2>
+<div class="stats">
+  <div class="stat"><b>79%</b><span>of everyday web tasks failed (38 / 48 runs; 95% CI 66–88%)</span></div>
+  <div class="stat"><b>89%</b><span>of failures happened on a task that failed on every attempt: the same task, the same miss</span></div>
+  <div class="stat"><b>55%</b><span>of failures were judged preventable by a short site-specific note (+24% were "should hand off to a human")</span></div>
+  <div class="stat"><b>55%</b><span>of the time the agent said "done", it was wrong (false success, n=22)</span></div>
+  <div class="stat"><b>89%</b><span>of all agent tokens (8.4M of 9.4M) were spent on runs that failed</span></div>
+  <div class="stat"><b>47%</b><span>of all tokens went to sites that block automation, which a one-line "hand off here" note would cut short</span></div>
+</div>
+
+<p><strong>One-liner for the slide:</strong> Agents failed 79% of everyday web tasks, and 89% of those failures were the same task failing again. 55% were preventable with a short shared note, and 89% of tokens were burned on failed runs.</p>
+
+<h2>What we did</h2>
+<h3>Experiment 1: How often do agents fail, and do failures repeat?</h3>
+<ul>
+  <li><strong>Tasks:</strong> 24 everyday, non-coding tasks across 10 live sites: Google Flights, BART, IRS, CA DMV, USPS, REI, Allrecipes, OpenTable, NPS and Recreation.gov. Examples: look up a fare, find a form number, check campsite availability, filter products, reach a booking page and stop.</li>
+  <li><strong>Agent:</strong> <code>browser-use</code> (open-source browser agent) driving headless Chrome, powered by <code>openai/gpt-oss-120b</code> on Groq. Text-only: the agent reads the page structure, not screenshots. Up to 30 steps per run.</li>
+  <li><strong>Repetitions:</strong> each task run 2 times, independently, from a fresh browser profile (48 runs).</li>
+  <li><strong>Safety:</strong> the agent never buys, books, logs in or solves CAPTCHAs. Beyond the prompt, a harness guard blocks any click on buttons like "Place order", "Pay" or "Confirm reservation".</li>
+  <li><strong>Grading:</strong> an LLM judge saw only the factual action log and the final page content, never the agent's own reasoning, so the agent can't talk its way into a pass.</li>
+  <li><strong>Failure analysis:</strong> for every failure, an LLM gave the root cause, a category and whether a short note would have prevented it. Failures were then clustered (by structured key and by meaning) to find repeats.</li>
+</ul>
+
+<h3>Experiment 2: Does a knowledge base of notes help?</h3>
+<ul>
+  <li>For each group of preventable failures, an LLM wrote one short note aimed at the next agent, e.g. <em>"Click the 'Calculate Fare' button after setting both stations; only read the fare once a number appears."</em> That gave 17 notes.</li>
+  <li><strong>Answer-leak check:</strong> notes containing a task answer, a value from a successful answer, or a date were automatically rejected. All 17 notes passed.</li>
+  <li>The KB was frozen, then every task was rerun once with the same site's notes injected into the agent's prompt (24 runs).</li>
+</ul>
+
+<h2>Results</h2>
+<h3>Why agents fail</h3>
+<figure><img src="failure_categories.png" alt="Failure categories bar chart" /><figcaption>Root-cause categories of the 38 baseline failures.</figcaption></figure>
+<p>There were three dominant failure modes:</p>
+<ul>
+  <li><strong>Navigation (12):</strong> wrong page, or a URL the agent made up.</li>
+  <li><strong>False success (11):</strong> the agent reported a price, rate or ZIP that wasn't on the page.</li>
+  <li><strong>Blocked by bot protection (11):</strong> Cloudflare, reCAPTCHA or HTTP blocks.</li>
+</ul>
+<p>Real examples:</p>
+<ul>
+  <li><strong>BART:</strong> "Typed the date into the departure field, but the planner uses a custom calendar widget that ignores typed text."</li>
+  <li><strong>USPS:</strong> "Never clicked into a post office result, so the Saturday hours on the detail page were never seen."</li>
+  <li><strong>IRS:</strong> "Asserted a mileage rate without finding it on the page."</li>
+</ul>
+
+<h3>Failures repeat</h3>
+<figure><img src="top_clusters.png" alt="Top repeated failure clusters" /><figcaption>Largest clusters of the same mistake on the same site. Blue = the same quirk hit two or more different tasks.</figcaption></figure>
+<ul>
+  <li>17 of 24 tasks failed on <em>both</em> attempts: 34 of 38 failures (89%) are same-task repeats.</li>
+  <li>Grouping by meaning, 55% of failures fall into a cluster with another failure, and 39% are the same quirk hitting a <em>different</em> task on the same site.</li>
+  <li>On the 6 sites that let the agent in, 10 of 14 failures (71%) were repeats.</li>
+</ul>
+
+<h3>The cost of failure</h3>
+<figure><img src="token_waste.png" alt="Where baseline tokens went" /><figcaption>Where baseline tokens went. Failed runs are long: agents retry until they hit the step limit.</figcaption></figure>
+<ul>
+  <li>The average failed run used about 220k tokens, against about 100k for a successful run.</li>
+  <li>The 4 bot-blocked sites alone consumed 4.4M tokens (47%). A note saying "this site blocks automated browsers, hand off immediately" would recover most of that.</li>
+  <li>If the knowledge-fixable failures had instead cost what a typical success costs, we'd save about 32% of all tokens.</li>
+  <li>Whole experiment: about $2.70 in API costs.</li>
+</ul>
+
+<h3>Knowledge-base rerun: not a win yet, and why</h3>
+<p>With notes injected, success went from <strong>21% to 12%</strong>, and on the 6 sites that loaded, from 42% to 25%. With one rerun per task this is within noise, but it is not the result we wanted. The traces show why:</p>
+<ol>
+  <li><strong>Retrieval, not knowledge.</strong> Every note for a site was injected, including notes written for other tasks. A USPS price lookup, which passed 2 of 2 without notes, got three notes about ZIP lookup and post-office hours, wandered off-site, and hit a CAPTCHA. The product needs <em>task-relevant</em> retrieval with a relevance threshold, not "everything about this site".</li>
+  <li><strong>Notes were sometimes right, but the agent still failed.</strong> The BART trip-planner note correctly says "don't type the date; use the calendar widget", but the text-only agent couldn't operate the widget. Some quirks need a stronger, vision-capable agent to act on the note.</li>
+  <li><strong>Tiny sample.</strong> One rerun per task; most changes are single-run flips. The text-only judge also misgraded at least one correct answer: the $35 Yosemite fee was marked unsupported.</li>
+</ol>
+<p class="note"><strong>Pitch framing:</strong> the problem is clearly real. Agents fail most everyday tasks, mostly by repeating the same mistakes, and burn most of their tokens doing it. Our first naive KB shows the knowledge is capturable: 17 specific, leak-free notes written automatically. It also shows the hard part is <em>delivering the right note at the right moment</em>, which is exactly what the product's retrieval layer is for.</p>
+
+<h2>Which tasks to use for the final test</h2>
+<p>Use tasks on sites that let a headless agent in, that fail repeatedly for a reason a note can fix, and that already have a matching note.</p>
+<div class="wide"><table>
+<thead><tr><th>Task</th><th>Baseline</th><th>Why it fails</th><th>Matching note</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>usps_03: nearest post office's Saturday hours</td><td>0 / 2</td><td>Never clicks into the location detail page, where the hours live</td><td>"Click the post office entry to open its detail page; hours are only there"</td><td class="use">Use (best demo)</td></tr>
+<tr><td>bart_01: trip planner, 9 AM departure</td><td>0 / 2</td><td>Types into a custom date/time widget that ignores text; invents planner URLs</td><td>"Don't type the date; use the calendar widget, then the time dropdown"</td><td class="use">Use (needs a vision-capable agent)</td></tr>
+<tr><td>bart_02: fare Berkeley → Embarcadero</td><td>1 / 2</td><td>Doesn't click "Calculate Fare"</td><td>"Click Calculate Fare; read only once a number appears"</td><td class="use">Use</td></tr>
+<tr><td>irs_02: business mileage rate</td><td>0 / 2</td><td>Reports a rate it never found on the page (false success)</td><td>Success-signal note</td><td class="use">Use</td></tr>
+<tr><td>dmv_01: online renewal eligibility</td><td>0 / 2</td><td>Fabricates eligibility rules and fee</td><td>Where the eligibility text lives</td><td class="use">Use</td></tr>
+<tr><td>nps_02: Tioga Road status</td><td>1 / 2 → 1 / 1 with KB</td><td>Infers status from an unrelated alert</td><td>"Read the Road Conditions entry; don't infer from alerts"</td><td class="use">Use</td></tr>
+<tr><td>irs_01: transcript form number</td><td>2 / 2</td><td>Already passes</td><td>None</td><td>Control (should stay passing)</td></tr>
+<tr><td>usps_02, bart_03, recgov_01, nps_01</td><td>mixed</td><td>Mostly pass; useful regression checks</td><td>None</td><td>Control</td></tr>
+<tr><td>Allrecipes, OpenTable, REI tasks</td><td>0 / 18</td><td>Site blocks headless browsers (Cloudflare / HTTP2 / 403)</td><td>Only a "hand off" note</td><td class="avoid">Avoid for the KB demo; use only to show handoff token savings</td></tr>
+<tr><td>Google Flights tasks</td><td>0 / 6</td><td>reCAPTCHA, or results not rendered for the bot; agent fabricates flights</td><td>None useful</td><td class="avoid">Avoid</td></tr>
+</tbody></table></div>
+
+<p><strong>Before the final test, fix these:</strong></p>
+<ol>
+  <li>Inject only notes whose task pattern matches the task (top 1–2, with a relevance cutoff).</li>
+  <li>Run 3+ reps per condition on the "Use" tasks above.</li>
+  <li>Use a vision-capable agent and judge if possible, or hand-check the judge on the 20-run sample in <code>out/judge_sample.csv</code>.</li>
+  <li>Add "hand off immediately" notes for blocked sites and measure the token savings directly.</li>
+</ol>
+
+<h2>Caveats</h2>
+<ul>
+  <li>Small pilot: 24 tasks, 2 baseline reps and 1 KB rep. The CIs are wide.</li>
+  <li>The same model (gpt-oss-120b) was the agent, judge and note writer, and judging used page text rather than screenshots. The judge has not been hand-validated yet.</li>
+  <li>4 of 10 sites blocked the headless browser, which inflates the failure rate relative to an agent with a real browser profile. On the 6 sites that loaded, the failure rate was 58% (14 / 24).</li>
+  <li>Live sites change; results reflect 17 Oct 2026.</li>
+</ul>
+<p style="color: var(--sp-muted)">Full auto-generated report with all metrics, prompts and definitions: <code>out/report.md</code> in the repo.</p>
+</main>
+</body>
+</html>

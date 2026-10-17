@@ -169,3 +169,30 @@ Every judgment call and deviation from the build brief, newest sections last. Ke
 - Site swaps: _none yet_ (count = 0)
 - Task rewordings: _none yet_
 - Headed-only sites (`browser.headed_sites`): _none yet_
+
+## Pilot run, 17 Oct 2026 (Groq Developer tier)
+
+- **Protocol cut to fit a ~15-minute window (user request).**
+  - Baseline: 2 reps per task (48 runs), not 3. The first 8 runs were done at concurrency 5 with 1–3 s pacing; the
+    rest at concurrency 10 (3 per site) with 0.3–1 s pacing.
+  - with_kb: 1 rep (24 runs).
+  - "pass^k" is therefore pass^2.
+- **Bot-blocked sites were not swapped** (no time).
+  - Allrecipes: Cloudflare challenge.
+  - OpenTable and REI: ERR_HTTP2_PROTOCOL_ERROR / 403.
+  - Google Flights: reCAPTCHA, or results never rendered for the headless agent.
+
+  These 12 tasks count as failures, mostly `human_handoff`. Clean-subset numbers (the 6 sites that loaded) are in the
+  pitch page.
+- **KB result: 21% → 12% success** (n=1 rep, within noise). Diagnosed causes:
+  - Retrieval injected every same-site note, because each site has ≤5 notes and top_k=5. Irrelevant notes derailed
+    tasks that pass without them (e.g. usps_02).
+  - The text-only agent could not act on some correct notes (the BART calendar widget).
+  - The text-only judge misgraded at least one correct answer (nps_01).
+- **Next fix before a final test:** only inject notes whose `task_pattern` matches the task (top 1–2 with a
+  similarity cutoff), run 3+ reps on the recommended tasks, and hand-validate the judge sample.
+- **Outputs committed:**
+  - `out/report.md` (auto-generated) and `out/results.json`;
+  - charts;
+  - `out/kb_notes.json` (the frozen KB);
+  - `out/pitch/index.html`, published as a Superset page.

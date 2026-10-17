@@ -242,7 +242,7 @@ def headline(m: dict) -> str:
     if k:
         sp = k["steps_success"]["pct_change"]
         s += (f" With our knowledge base: {pct(k['a']['success']['p'])} → {pct(k['b']['success']['p'])} success, "
-              f"{pct(-sp) if sp is not None else 'n/a'} {'fewer' if (sp or 0) <= 0 else 'more'} steps.")
+              f"{pct(abs(sp)) if sp is not None else 'n/a'} {'fewer' if (sp or 0) <= 0 else 'more'} steps on successful runs.")
     return s
 
 
@@ -251,8 +251,8 @@ def slide_numbers(m: dict) -> str:
     lines = [f"**{headline(m)}**", ""]
     lines.append(f"- When an agent says it's done, it's wrong {pct(b['false_success']['p'])} of the time "
                  f"(false-success rate, n={b['false_success']['n']}).")
-    lines.append(f"- Reliability gap: pass@1 {pct(b['pass@1']['p'])} vs pass^3 {pct(b['pass^k']['p'])}; "
-                 f"{pct(b['flakiness']['p'])} of tasks are flaky across 3 identical runs.")
+    lines.append(f"- Reliability gap: pass@1 {pct(b['pass@1']['p'])} vs pass^k {pct(b['pass^k']['p'])}; "
+                 f"{pct(b['flakiness']['p'])} of tasks are flaky across repeated identical runs.")
     lines.append(f"- {pct(f['repeat_B']['cross_task']['p'])} of failures are the same quirk biting a *different* "
                  f"task on the same site (cross-task repeats).")
     lines.append(f"- {pct(w['tokens']['share'])} of all agent tokens ({tok(w['tokens']['wasted'])}, "
@@ -312,7 +312,7 @@ def write_report(m: dict, charts: dict[str, str | None], synthetic: bool) -> str
                                                       else "") + ".\n")
     add("## 3. How often agents fail\n")
     add(f"- **Failure rate:** {ci(b['failure'])}")
-    add(f"- **pass@1:** {ci(b['pass@1'])}; **pass^3 (all 3 reps succeed):** {ci(b['pass^k'])}")
+    add(f"- **pass@1:** {ci(b['pass@1'])}; **pass^k (all reps succeed):** {ci(b['pass^k'])}")
     add(f"- **Task flakiness (mixed outcomes):** {ci(b['flakiness'])}")
     add(f"- **False-success rate** (agent said done, judge said no): {ci(b['false_success'])}")
     add(f"- **Terminal statuses:** " + ", ".join(f"{k_}: {v}" for k_, v in sorted(b["terminal_status"].items())) + "\n")
